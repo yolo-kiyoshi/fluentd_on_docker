@@ -1,0 +1,26 @@
+version: "3"
+services:
+  fluentd:
+    build: ./fluentd/
+    ports:
+      - "24224:24224"
+      - "24224:24224/udp"
+    volumes:
+      - ./fluentd/log:/fluentd/log
+      - ./fluentd/conf:/fluentd/etc
+
+  flask:
+    build: ./flask/
+    ports:
+      - "8080:80"
+    tty: true
+    stdin_open: true
+    volumes:
+      - ./flask/src:/app/src
+    working_dir: /app/src
+    command: python -u run_server.py
+    logging:
+      driver: "fluentd"
+      options:
+        fluentd-address: "localhost:24224"
+        tag: "docker.{{.Name}}"
